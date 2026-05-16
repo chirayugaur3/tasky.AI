@@ -34,12 +34,12 @@ function daysAgo(n: number, hour = 14) {
 function hoursAgo(n: number) { const d = new Date(); d.setHours(d.getHours() - n); return d; }
 
 async function main() {
-  console.log("→ Clearing existing data…");
-  await prisma.eODReport.deleteMany();
-  await prisma.task.deleteMany();
-  await prisma.teamMember.deleteMany();
-  await prisma.project.deleteMany();
-  await prisma.user.deleteMany();
+  // Idempotent: skip if data already exists (so prod deploys don't wipe state)
+  const existing = await prisma.user.count();
+  if (existing > 0) {
+    console.log(`→ Database already seeded (${existing} users). Skipping.`);
+    return;
+  }
 
   console.log("→ Creating users…");
   const hashedPassword = await bcrypt.hash(SEED_PASSWORD, 10);
