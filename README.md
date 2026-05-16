@@ -1,4 +1,4 @@
-# Ethara AI — Operations Intelligence Platform
+# tasky.AI — Operations Intelligence Platform
 
 A role-aware, hierarchy-driven project management dashboard. The interface physically changes based on who's logged in: a Project Lead sees a dense intelligence cockpit; an Intern sees a clean task-and-status surface; an Executive sees the org at a glance; QR sees a review queue.
 
