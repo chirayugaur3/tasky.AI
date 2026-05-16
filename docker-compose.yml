@@ -1,0 +1,21 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: ethara-ai-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ethara
+      POSTGRES_PASSWORD: ethara_dev_pw
+      POSTGRES_DB: ethara_ai
+    ports:
+      - "5433:5432"
+    volumes:
+      - ethara_pg_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ethara -d ethara_ai"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  ethara_pg_data:

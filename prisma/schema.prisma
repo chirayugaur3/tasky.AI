@@ -1,0 +1,144 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// -----------------------------------------------------------------------------
+// Enums
+// -----------------------------------------------------------------------------
+
+enum Role {
+  CEO
+  CTO
+  TPM
+  PROJECT_LEAD
+  QUALITY_LEAD
+  QR
+  INTERN
+}
+
+enum TaskStatus {
+  NOT_STARTED
+  IN_PROGRESS
+  BLOCKED
+  DONE
+}
+
+enum TaskPriority {
+  LOW
+  MEDIUM
+  HIGH
+}
+
+enum ProjectHealth {
+  ON_TRACK
+  AT_RISK
+  BLOCKED
+}
+
+enum QRStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+// -----------------------------------------------------------------------------
+// Models
+// -----------------------------------------------------------------------------
+
+model User {
+  id        String   @id @default(cuid())
+  name      String
+  email     String   @unique
+  password  String
+  role      Role
+  title     String?  // Human-readable job title, e.g. "Software Engineer", "ML Researcher"
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  assignedTasks   Task[]       @relation("AssignedTo")
+  createdTasks    Task[]       @relation("CreatedBy")
+  qrReviewedTasks Task[]       @relation("QRReviewedBy")
+  projectsLed     Project[]    @relation("ProjectLead")
+  teamMemberships TeamMember[]
+  eodReports      EODReport[]
+}
+
+model Project {
+  id          String        @id @default(cuid())
+  name        String
+  description String?
+  health      ProjectHealth @default(ON_TRACK)
+  deadline    DateTime
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+
+  projectLeadId String
+  projectLead   User   @relation("ProjectLead", fields: [projectLeadId], references: [id])
+
+  tasks       Task[]
+  teamMembers TeamMember[]
+  eodReports  EODReport[]
+}
+
+model Task {
+  id            String       @id @default(cuid())
+  taskNumber    Int          @default(autoincrement())
+  title         String
+  description   String?
+  status        TaskStatus   @default(NOT_STARTED)
+  priority      TaskPriority @default(MEDIUM)
+  deadline      DateTime?
+  blockerReason String?
+  blockedSince  DateTime?
+  qrStatus      QRStatus     @default(PENDING)
+  qrReviewedAt  DateTime?
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
+
+  projectId String
+  project   Project @relation(fields: [projectId], references: [id])
+
+  assignedToId String?
+  assignedTo   User?   @relation("AssignedTo", fields: [assignedToId], references: [id])
+
+  createdById String
+  createdBy   User   @relation("CreatedBy", fields: [createdById], references: [id])
+
+  qrReviewedById String?
+  qrReviewedBy   User?   @relation("QRReviewedBy", fields: [qrReviewedById], references: [id])
+
+  @@index([projectId])
+  @@index([assignedToId])
+  @@index([status])
+}
+
+model TeamMember {
+  id        String   @id @default(cuid())
+  userId    String
+  projectId String
+  isPresent Boolean  @default(true)
+  createdAt DateTime @default(now())
+
+  user    User    @relation(fields: [userId], references: [id])
+  project Project @relation(fields: [projectId], references: [id])
+
+  @@unique([userId, projectId])
+}
+
+model EODReport {
+  id              String   @id @default(cuid())
+  context         String
+  generatedReport String
+  date            DateTime @default(now())
+
+  projectLeadId String
+  projectLead   User   @relation(fields: [projectLeadId], references: [id])
+
+  projectId String
+  project   Project @relation(fields: [projectId], references: [id])
+}
