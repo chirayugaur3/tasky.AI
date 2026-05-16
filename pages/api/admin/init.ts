@@ -1,14 +1,10 @@
 import type { NextApiRequest, NextApiResponse } from "next";
-import { exec } from "child_process";
-import { promisify } from "util";
 import { PrismaClient, Role, TaskStatus, TaskPriority, ProjectHealth, QRStatus } from "@prisma/client";
 import bcrypt from "bcryptjs";
 
-const execAsync = promisify(exec);
 const prisma = new PrismaClient();
 
-// One-shot DB initialiser. Runs `prisma db push` then seeds the database.
-// Designed to be hit ONCE after attaching a fresh Postgres to the deployment.
+// One-shot DB seeder. Schema is pushed by `prisma migrate deploy` during the Vercel build.
 // Idempotent — subsequent calls skip seeding if users already exist.
 //
 // Usage:  curl -X POST "https://<your-app>.vercel.app/api/admin/init?secret=tasky-init-2026"
