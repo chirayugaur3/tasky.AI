@@ -2,7 +2,7 @@
 
 A role-aware, hierarchy-driven project management dashboard. The interface physically changes based on who's logged in: a Project Lead sees a dense intelligence cockpit; an Intern sees a clean task-and-status surface; an Executive sees the org at a glance; QR sees a review queue.
 
-> **Live app:** _add your Railway URL after deploying_
+> **Live app:** _https://tasky-ai-pi.vercel.app/login
 
 ---
 
@@ -146,7 +146,7 @@ Both expect the dev server on `http://localhost:3000`.
 
 ---
 
-## Deployment (Railway)
+## Deployment 
 
 1. Push the repo to GitHub.
 2. Create a new Railway project, connect the GitHub repo.
