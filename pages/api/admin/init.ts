@@ -36,16 +36,13 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   const log: string[] = [];
 
   try {
-    // Step 1: ensure schema exists (db push — works without a migrations dir)
-    log.push("→ Running prisma db push…");
-    const { stdout, stderr } = await execAsync("npx prisma db push --accept-data-loss --skip-generate", {
-      env: { ...process.env, PRISMA_HIDE_UPDATE_MESSAGE: "1" },
-    });
-    log.push(stdout.split("\n").filter(Boolean).slice(-5).join("\n"));
-    if (stderr) log.push(`stderr: ${stderr.slice(0, 500)}`);
+    // Step 1: Check database access (assuming schema is pushed during Vercel build)
+    log.push("→ Checking database connection...");
+    await prisma.$connect();
+    log.push("✓ Database connected");
   } catch (e) {
-    log.push(`db push failed: ${e instanceof Error ? e.message : String(e)}`);
-    return res.status(500).json({ data: null, error: "Schema sync failed", log, status: 500 });
+    log.push(`Database connection failed: ${e instanceof Error ? e.message : String(e)}`);
+    return res.status(500).json({ data: null, error: "Database connection failed", log, status: 500 });
   }
 
   // Step 2: idempotent seed
