@@ -20,28 +20,29 @@ export function BrandPanel({ headline, subtitle, steps }: Props) {
         backgroundSize: "24px 24px",
       }}
     >
-      {/* Overhead spotlight + faint bottom counter-bleed.
-          Brightest at the top edge, falls off fast so cards sit on their own dark ground. */}
+      {/* Vivid overhead purple glow — bright, soft-edged lavender at the top
+          that bleeds down into deep purple, then falls off to black past the midline. */}
       <div
         aria-hidden
         className="pointer-events-none absolute inset-0"
         style={{
           background: [
-            // Bottom counter-bleed — barely-there purple wash so cards don't float in dead black
-            "radial-gradient(ellipse 80% 30% at 50% 100%, rgba(123,110,246,0.05) 0%, transparent 70%)",
-            // Main overhead spotlight — large, originates just above the panel
-            "radial-gradient(ellipse 110% 70% at 50% -10%, rgba(123,110,246,0.55) 0%, rgba(123,110,246,0.20) 25%, rgba(123,110,246,0.06) 50%, transparent 75%)",
+            // Bright lavender core — concentrated near top, soft white-purple center
+            "radial-gradient(ellipse 70% 55% at 50% 5%, rgba(200,170,255,0.95) 0%, rgba(170,120,250,0.75) 18%, rgba(140,80,240,0.45) 38%, rgba(90,40,180,0.20) 60%, transparent 80%)",
+            // Wider purple halo — extends the bleed outward and downward
+            "radial-gradient(ellipse 120% 80% at 50% 0%, rgba(150,90,240,0.55) 0%, rgba(110,60,210,0.25) 35%, transparent 70%)",
           ].join(", "),
         }}
       />
 
-      {/* Bottom vignette — adds a hair of depth below the cards */}
+      {/* Bottom-half black wash — pulls the lower portion to near-pure black so
+          the purple reads as a glow rather than an even tint. */}
       <div
         aria-hidden
         className="pointer-events-none absolute inset-0"
         style={{
           background:
-            "linear-gradient(180deg, transparent 60%, rgba(0,0,0,0.30) 100%)",
+            "linear-gradient(180deg, transparent 35%, rgba(0,0,0,0.55) 65%, rgba(0,0,0,0.85) 100%)",
         }}
       />
 
