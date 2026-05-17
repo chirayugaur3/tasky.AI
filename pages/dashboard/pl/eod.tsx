@@ -3,7 +3,7 @@ import { useState } from "react";
 import { getServerSession } from "next-auth/next";
 import type { Session } from "next-auth";
 import { Role } from "@prisma/client";
-import { Sparkles, Info } from "lucide-react";
+import { Sparkles, Copy, Check } from "lucide-react";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { serializableSession } from "@/lib/session-utils";
@@ -13,9 +13,7 @@ import DashboardLayout from "@/components/layout/DashboardLayout";
 type ProjectOption = { id: string; name: string };
 
 type Report = {
-  completedToday: string[];
-  activeBlockers: string[];
-  tomorrowFocus: string[];
+  formattedText: string;
 };
 
 type Props = {
@@ -46,35 +44,19 @@ export const getServerSideProps: GetServerSideProps<Props> = async (ctx) => {
 
 function Skeleton() {
   return (
-    <div className="flex flex-col gap-6">
-      {[1, 2, 3].map((i) => (
-        <div key={i} className="flex flex-col gap-2">
-          <div className="skeleton h-3 w-32 rounded-chip" />
-          <div className="skeleton h-4 w-full rounded-chip" />
-          <div className="skeleton h-4 w-5/6 rounded-chip" />
-          <div className="skeleton h-4 w-2/3 rounded-chip" />
-        </div>
+    <div className="flex flex-col gap-3">
+      {[1, 2, 3, 4, 5, 6].map((i) => (
+        <div key={i} className="skeleton h-4 w-full rounded-chip" />
       ))}
     </div>
   );
 }
 
-function ReportSection({ title, items }: { title: string; items: string[] }) {
-  return (
-    <div className="border-l-[3px] border-l-accent-primary pl-4">
-      <p className="text-meta text-text-secondary tracking-section uppercase font-medium mb-2">{title}</p>
-      <ul className="flex flex-col gap-1.5">
-        {items.length === 0 ? (
-          <li className="text-body text-text-disabled italic">Nothing to report.</li>
-        ) : (
-          items.map((item, i) => (
-            <li key={i} className="text-body text-text-primary">• {item}</li>
-          ))
-        )}
-      </ul>
-    </div>
-  );
-}
+const CONTEXT_PLACEHOLDER = `e.g.,
+29 members working, 22 interns, 7 FTs.
+65 tasks delivered on Multimango.
+Newly onboarded interns introduced to Odoo workflow. They shadowed ongoing tasks while working alongside their allocated peers to maintain quality.
+CC: vyom sahu`;
 
 export default function EODPage({ today, projects }: Props) {
   const [projectId, setProjectId] = useState(projects[0]?.id ?? "");
@@ -82,12 +64,14 @@ export default function EODPage({ today, projects }: Props) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [report, setReport] = useState<Report | null>(null);
+  const [copied, setCopied] = useState(false);
 
   async function generate() {
     if (!projectId) return;
     setError(null);
     setLoading(true);
     setReport(null);
+    setCopied(false);
     try {
       const res = await fetch("/api/eod/generate", {
         method: "POST",
@@ -104,6 +88,17 @@ export default function EODPage({ today, projects }: Props) {
     }
   }
 
+  async function copyToClipboard() {
+    if (!report) return;
+    try {
+      await navigator.clipboard.writeText(report.formattedText);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch {
+      setError("Couldn't copy to clipboard");
+    }
+  }
+
   const header = (
     <div className="flex flex-col">
       <h1 className="text-section text-text-primary">EOD Report</h1>
@@ -116,14 +111,17 @@ export default function EODPage({ today, projects }: Props) {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* LEFT — CONTEXT */}
         <div className="bg-bg-surface border border-border-subtle rounded-card p-6 flex flex-col gap-4">
-          <div className="flex items-center justify-between">
-            <p className="text-meta text-text-secondary tracking-section uppercase font-medium">Context</p>
-            <Info size={14} className="text-text-disabled" />
+          <p className="text-meta text-text-secondary tracking-section uppercase font-medium">Context</p>
+
+          <div className="text-body text-text-secondary leading-relaxed flex flex-col gap-2">
+            <p>Provide your raw EOD notes. Include all of:</p>
+            <ol className="list-decimal pl-5 flex flex-col gap-1 text-meta text-text-secondary">
+              <li><span className="text-text-primary">Headcount:</span> total members working, interns, FTs, on-leave</li>
+              <li><span className="text-text-primary">Delivery:</span> tasks delivered/submitted + platform (Multimango, Odoo…)</li>
+              <li><span className="text-text-primary">Operational notes:</span> onboarding, platform issues, evaluations, shadowing</li>
+              <li><span className="text-text-primary">CC:</span> manager name (with or without @)</li>
+            </ol>
           </div>
-          <p className="text-body text-text-secondary leading-relaxed">
-            Provide raw updates, bullet points, or stream-of-consciousness notes. Tasky.AI
-            will structure it into a formal EOD report.
-          </p>
 
           <select
             value={projectId}
@@ -139,8 +137,8 @@ export default function EODPage({ today, projects }: Props) {
             value={context}
             onChange={(e) => setContext(e.target.value)}
             rows={10}
-            placeholder="e.g., Finished the UI designs for the reporting module. Had a sync with backend about API payloads. Blocked on the staging environment deployment."
-            className="bg-bg-elevated border border-border-default rounded-card px-4 py-3 text-body text-text-primary placeholder:text-text-disabled outline-none focus:border-accent-primary transition-colors resize-none flex-1 min-h-[200px]"
+            placeholder={CONTEXT_PLACEHOLDER}
+            className="bg-bg-elevated border border-border-default rounded-card px-4 py-3 text-body text-text-primary placeholder:text-text-disabled outline-none focus:border-accent-primary transition-colors resize-none flex-1 min-h-[200px] font-mono text-sm"
           />
 
           {error && <p className="text-meta text-status-danger">{error}</p>}
@@ -160,7 +158,7 @@ export default function EODPage({ today, projects }: Props) {
         </div>
 
         {/* RIGHT — REPORT */}
-        <div className="bg-bg-surface border border-border-subtle rounded-card p-6 min-h-[460px] flex flex-col gap-4 bg-dot-grid">
+        <div className="bg-bg-surface border border-border-subtle rounded-card p-6 min-h-[460px] flex flex-col gap-4">
           {loading && <Skeleton />}
           {!loading && !report && !error && (
             <div className="flex-1 flex flex-col items-center justify-center gap-3">
@@ -168,6 +166,7 @@ export default function EODPage({ today, projects }: Props) {
                 <span className="text-accent-primary text-section font-semibold">EA</span>
               </div>
               <p className="text-body text-text-secondary">Your report will appear here.</p>
+              <p className="text-meta text-text-disabled">Ready to paste into WhatsApp/Slack.</p>
             </div>
           )}
           {report && (
@@ -176,16 +175,17 @@ export default function EODPage({ today, projects }: Props) {
                 <p className="text-meta text-text-secondary tracking-section uppercase font-medium">
                   Generated Report
                 </p>
-                <span className="text-meta text-text-secondary bg-bg-elevated px-2 py-1 rounded-chip">
-                  {new Date().toLocaleDateString("en-US", { month: "short", day: "numeric" })}
-                </span>
+                <button
+                  onClick={copyToClipboard}
+                  className="flex items-center gap-1.5 text-meta text-text-primary bg-bg-elevated hover:bg-bg-primary border border-border-default px-3 py-1.5 rounded-chip transition-colors"
+                >
+                  {copied ? <Check size={12} /> : <Copy size={12} />}
+                  {copied ? "Copied" : "Copy"}
+                </button>
               </div>
-              <ReportSection title="Completed Today" items={report.completedToday} />
-              <ReportSection title="Active Blockers" items={report.activeBlockers} />
-              <ReportSection title="Tomorrow's Focus" items={report.tomorrowFocus} />
-              <button className="mt-auto w-full bg-accent-primary hover:bg-accent-hover text-text-primary text-body font-semibold py-3 rounded-button transition-colors">
-                Submit Report
-              </button>
+              <pre className="flex-1 bg-bg-elevated border border-border-subtle rounded-card p-4 text-body text-text-primary font-mono text-sm whitespace-pre-wrap leading-relaxed overflow-auto">
+                {report.formattedText}
+              </pre>
             </>
           )}
         </div>

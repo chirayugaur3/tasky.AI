@@ -1,77 +1,133 @@
 import Groq from "groq-sdk";
-import { z } from "zod";
 
-export type TaskTelemetry = {
-  completed: string[];
-  inProgress: string[];
-  blocked: { task: string; reason: string }[];
+export type EODReportInput = {
+  projectName: string;
+  date: string; // DD/MM/YYYY
+  plContext: string;
 };
 
 export type EODReport = {
-  completedToday: string[];
-  activeBlockers: string[];
-  tomorrowFocus: string[];
+  formattedText: string;
 };
-
-const reportSchema = z.object({
-  completedToday: z.array(z.string()).max(8),
-  activeBlockers: z.array(z.string()).max(8),
-  tomorrowFocus: z.array(z.string()).max(8),
-});
 
 let _client: Groq | null = null;
 function getClient(): Groq {
   if (_client) return _client;
   const apiKey = process.env.GROQ_API_KEY;
   if (!apiKey) {
-    throw new Error(
-      "GROQ_API_KEY is not set. Add it to .env and restart the dev server."
-    );
+    throw new Error("GROQ_API_KEY is not set in this environment.");
   }
   _client = new Groq({ apiKey });
   return _client;
 }
 
-export async function generateEODReport(
-  plContext: string,
-  telemetry: TaskTelemetry
-): Promise<EODReport> {
-  const prompt = `You are generating an End of Day report for a Project Lead at a tech company.
+const FEW_SHOT_EXAMPLES = `
+Example 1:
+PL notes: "29 working today, 22 interns + 7 FTs. Delivered 65 tasks on Multimango. Newly onboarded interns introduced to Odoo workflow. They shadowed ongoing tasks while working alongside their allocated peers to maintain quality. CC: vyom sahu"
+Output:
+*EOD Report*
+*Project - Leviathan*
+Date: 16/05/2026
 
-Project Lead's context (their raw notes for today):
-${plContext.trim() || "(none provided)"}
+*Team Overview:*
+Overall team members working: 29
+Working Interns: 22
+Total FTs working: 7
 
-Today's task telemetry pulled from the system:
-- Completed tasks: ${telemetry.completed.length ? telemetry.completed.join("; ") : "none"}
-- In progress tasks: ${telemetry.inProgress.length ? telemetry.inProgress.join("; ") : "none"}
-- Blocked tasks: ${
-    telemetry.blocked.length
-      ? telemetry.blocked.map((b) => `"${b.task}" (blocker: ${b.reason})`).join("; ")
-      : "none"
-  }
+*Delivery Status:*
+Total tasks delivered on Multimango: 65
 
-Synthesize the above into a concise, professional EOD report. Be specific and actionable. Each item should be one short sentence. Maximum 4 items per section.
+*Operational Update:*
+The taskers performed operations via the Odoo platform throughout the shift. The newly onboarded interns were introduced to the Odoo workflow and operational processes.
 
-Return ONLY valid JSON in exactly this shape, with no surrounding prose or markdown fences:
-{
-  "completedToday": ["..."],
-  "activeBlockers": ["..."],
-  "tomorrowFocus": ["..."]
-}`;
+The interns shadowed ongoing tasks while simultaneously working on assigned tasks alongside their allocated peers to ensure process understanding and maintain quality standards throughout the workflow.
+
+Thanks,
+CC: @vyom sahu
+
+---
+
+Example 2:
+PL notes: "36 members, 3 on leave. 104 delivered on Multimango. Evaluated 105 people via PRD assessment, QL conducted interviews. 31 shortlisted and onboarded, start tasking tomorrow. CC: ~Kaustubh Dalvi"
+Output:
+*EOD Report*
+*Project - Leviathan*
+Date: 15/05/2026
+
+*Team Overview:*
+Overall team members: 36
+Members on leave: 3
+
+*Delivery Status:*
+Total tasks delivered on Multimango: 104
+
+*Operational Update:*
+A total of 105 members were evaluated through the assessment process, which included PRD generation. The QL team conducted assessments along with short interviews for the evaluated members.
+
+Out of those 105 evaluated members, 31 members were shortlisted, onboarded, and tagged to the project. They are scheduled to begin tasking operations from tomorrow onwards.
+
+Thanks,
+CC: @~Kaustubh Dalvi
+
+---
+
+Example 3:
+PL notes: "38 members, 3 on leave. 50 tasks submitted on Multimango. Taskers used Odoo all shift. Hit several platform issues that slowed task execution. Dev team working on fixes in parallel to restore stability. CC: vyom sahu"
+Output:
+*EOD Report*
+*Project - Leviathan*
+Date: 14/05/2026
+
+*Team Overview:*
+Overall team members: 38
+Members on leave: 3
+
+*Delivery Status:*
+Total tasks submitted on Multimango: 50
+
+*Operational Update:*
+Taskers performed project tasks using the Odoo platform throughout the shift. During the process, several platform related issues were encountered, which impacted smooth task execution. The development team is actively working on resolving these issues parallelly to ensure platform stability and enable maximum bandwidth utilization.
+
+Thanks
+CC: @vyom sahu
+`.trim();
+
+export async function generateEODReport(input: EODReportInput): Promise<EODReport> {
+  const { projectName, date, plContext } = input;
+
+  const systemPrompt = `You are an operations assistant that converts a Project Lead's raw EOD notes into a formatted End of Day report.
+
+The output is shared in WhatsApp/Slack, so it uses *asterisks* for bold section headers.
+
+You MUST follow these rules strictly:
+- Match the exact format shown in the examples — sections, blank lines, header style.
+- Date format: DD/MM/YYYY.
+- Use whichever Team Overview variant fits the PL's notes (working breakdown vs members + on-leave).
+- Operational Update: 1-3 short paragraphs of factual professional prose. No buzzwords like "leverage", "synergy", "robust". No emojis. No bullet points.
+- If headcount or delivery numbers are missing from the PL's notes, OMIT that line. Never invent numbers.
+- Always end with "Thanks," followed by "CC: @<name>" on the next line. Add the @ prefix to the name yourself if the PL didn't include it.
+- Output ONLY the formatted report. No JSON, no markdown code fences, no commentary, no "Here is your report:" preface.
+
+Reference examples (study the structure and tone carefully):
+
+${FEW_SHOT_EXAMPLES}`;
+
+  const userPrompt = `Generate today's EOD report.
+
+Project: ${projectName}
+Date: ${date}
+
+PL's raw notes:
+${plContext.trim() || "(no notes provided — produce a minimal report stating that delivery telemetry is pending)"}`;
 
   const client = getClient();
   const completion = await client.chat.completions.create({
     model: "llama-3.3-70b-versatile",
     max_tokens: 1024,
-    temperature: 0.4,
-    response_format: { type: "json_object" },
+    temperature: 0.3,
     messages: [
-      {
-        role: "system",
-        content:
-          "You are an executive assistant that produces structured EOD reports as strict JSON. Never include markdown fences.",
-      },
-      { role: "user", content: prompt },
+      { role: "system", content: systemPrompt },
+      { role: "user", content: userPrompt },
     ],
   });
 
@@ -82,24 +138,9 @@ Return ONLY valid JSON in exactly this shape, with no surrounding prose or markd
 
   const cleaned = text
     .trim()
-    .replace(/^```(?:json)?\s*/i, "")
+    .replace(/^```(?:\w+)?\s*/i, "")
     .replace(/\s*```$/i, "")
     .trim();
 
-  let parsed: unknown;
-  try {
-    parsed = JSON.parse(cleaned);
-  } catch {
-    throw new Error(`LLM returned non-JSON output: ${cleaned.slice(0, 200)}`);
-  }
-
-  const result = reportSchema.safeParse(parsed);
-  if (!result.success) {
-    throw new Error(
-      `LLM output failed schema validation: ${result.error.issues
-        .map((i) => i.message)
-        .join("; ")}`
-    );
-  }
-  return result.data;
+  return { formattedText: cleaned };
 }
