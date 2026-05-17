@@ -106,7 +106,7 @@ export default function InternTaskCard({
         )}
       </div>
 
-      <div className="grid grid-cols-5 gap-2">
+      <div className="grid grid-cols-3 sm:grid-cols-5 gap-2">
         {SEGMENTS.map((s) => {
           const isSelected = status === s.value;
           return (
@@ -115,7 +115,7 @@ export default function InternTaskCard({
               disabled={saving}
               onClick={() => update(s.value, s.value === "BLOCKED" ? blockerReason : undefined)}
               className={cn(
-                "py-2 px-1 text-meta font-medium rounded-button border transition-colors min-h-[44px]",
+                "py-2 px-1 text-[11px] sm:text-meta font-medium rounded-button border transition-colors min-h-[44px] leading-tight",
                 isSelected
                   ? SEGMENT_COLOR[s.value]
                   : "border-border-default text-text-secondary hover:border-text-secondary"
@@ -130,13 +130,13 @@ export default function InternTaskCard({
           disabled
           title="Admin approval required"
           className={cn(
-            "py-2 px-1 text-meta font-medium rounded-button border transition-colors min-h-[44px] flex items-center justify-center gap-1.5",
+            "py-2 px-1 text-[11px] sm:text-meta font-medium rounded-button border transition-colors min-h-[44px] flex items-center justify-center gap-1 leading-tight",
             status === "DONE"
               ? SEGMENT_COLOR.DONE
               : "border-border-default text-text-disabled cursor-not-allowed opacity-60"
           )}
         >
-          <Lock size={12} strokeWidth={1.75} /> Done
+          <Lock size={11} strokeWidth={1.75} /> Done
         </button>
       </div>
 
