@@ -30,7 +30,10 @@ export default function BlockerAlert({
       <span className="text-meta text-text-secondary hidden sm:inline truncate max-w-[120px]">
         {initialLastName(blocker.assigneeName)}
       </span>
-      <span className="text-meta text-status-danger shrink-0 tabular-nums">
+      <span
+        suppressHydrationWarning
+        className="text-meta text-status-danger shrink-0 tabular-nums"
+      >
         Blocked {formatBlockedDuration(blocker.blockedSince)}
       </span>
     </button>

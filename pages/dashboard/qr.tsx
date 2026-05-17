@@ -152,7 +152,7 @@ export default function QRDashboard({ userName, today, pending, reviewed }: Prop
                   >
                     {t.qrStatus.charAt(0) + t.qrStatus.slice(1).toLowerCase()}
                   </span>
-                  <span className="text-meta text-text-secondary w-16 text-right">
+                  <span suppressHydrationWarning className="text-meta text-text-secondary w-16 text-right">
                     {t.deadline ? formatShortDate(t.deadline) : "—"}
                   </span>
                 </div>

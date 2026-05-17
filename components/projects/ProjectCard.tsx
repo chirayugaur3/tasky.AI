@@ -60,6 +60,7 @@ export default function ProjectCard({ project, href }: { project: ProjectCardDat
           </span>
         </div>
         <span
+          suppressHydrationWarning
           className={cn(
             "text-meta",
             isOverdue ? "text-status-danger font-medium" : "text-text-secondary"

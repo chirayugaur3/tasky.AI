@@ -121,7 +121,10 @@ function TaskCard({
         <span className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-[#1C1C2E] text-[10px] font-medium text-[#7878A0] shrink-0">
           {initials}
         </span>
-        <span className="text-[11px] text-[#7878A0] tabular-nums ml-auto">
+        <span
+          suppressHydrationWarning
+          className="text-[11px] text-[#7878A0] tabular-nums ml-auto"
+        >
           {task.deadline ? formatShortDate(task.deadline) : "—"}
         </span>
         <PriorityChip priority={task.priority} className="shrink-0" />

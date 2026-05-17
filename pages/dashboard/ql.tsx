@@ -139,7 +139,7 @@ export default function QLDashboard({ userName, today, stats, rows }: Props) {
                     {r.qrStatus.charAt(0) + r.qrStatus.slice(1).toLowerCase()}
                   </td>
                   <td className="py-3 text-text-secondary truncate max-w-[120px]">{r.reviewer ?? "—"}</td>
-                  <td className="py-3 pr-6 text-text-secondary">
+                  <td suppressHydrationWarning className="py-3 pr-6 text-text-secondary">
                     {r.deadline ? formatShortDate(r.deadline) : "—"}
                   </td>
                 </tr>

@@ -102,7 +102,7 @@ export default function InternTaskCard({
           )}
         </div>
         {due && (
-          <span className={cn("text-meta px-2 py-1 rounded-chip shrink-0", due.cls)}>{due.label}</span>
+          <span suppressHydrationWarning className={cn("text-meta px-2 py-1 rounded-chip shrink-0", due.cls)}>{due.label}</span>
         )}
       </div>
 

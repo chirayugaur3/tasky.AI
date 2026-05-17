@@ -238,7 +238,10 @@ export default function TasksPage({ today, tasks, projects }: Props) {
                     {t.project.name}
                   </span>
                   <Avatar name={t.assignedTo?.name ?? null} size="sm" />
-                  <span className="text-meta text-text-secondary w-16 text-right shrink-0 hidden sm:inline tabular-nums">
+                  <span
+                    suppressHydrationWarning
+                    className="text-meta text-text-secondary w-16 text-right shrink-0 hidden sm:inline tabular-nums"
+                  >
                     {t.deadline ? formatShortDate(t.deadline) : "—"}
                   </span>
                   <PriorityChip priority={t.priority} className="shrink-0" />

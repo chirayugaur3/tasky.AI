@@ -118,13 +118,13 @@ export default function PLRightPanel({
           />
           <div className="flex items-baseline gap-2">
             <span className="text-stat text-text-primary">80%</span>
-            <span className="text-body text-text-secondary">
+            <span suppressHydrationWarning className="text-body text-text-secondary">
               by {formatForecastDate(forecast.confidence80)}
             </span>
           </div>
           <div className="flex items-baseline gap-2">
             <span className="text-body text-text-secondary">95% by</span>
-            <span className="text-body text-text-primary">
+            <span suppressHydrationWarning className="text-body text-text-primary">
               {formatForecastDate(forecast.confidence95)}
             </span>
           </div>
@@ -137,7 +137,7 @@ export default function PLRightPanel({
       {/* EOD BUTTON */}
       <section className="mt-auto flex flex-col gap-2">
         {lastGeneratedAt && (
-          <p className="text-meta text-text-disabled text-right">
+          <p suppressHydrationWarning className="text-meta text-text-disabled text-right">
             Last generated:{" "}
             {format(
               typeof lastGeneratedAt === "string"

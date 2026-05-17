@@ -289,7 +289,7 @@ export default function ProjectDetail({ project, tasks, workload, forecast }: Pr
                       <td className="py-3">
                         <Avatar name={t.assignedTo?.name ?? null} size="sm" />
                       </td>
-                      <td className="py-3 text-text-secondary">
+                      <td suppressHydrationWarning className="py-3 text-text-secondary">
                         {t.deadline ? formatShortDate(t.deadline) : "—"}
                       </td>
                       <td className="py-3">
@@ -357,13 +357,13 @@ export default function ProjectDetail({ project, tasks, workload, forecast }: Pr
           <p className="text-meta text-text-secondary tracking-section uppercase font-medium mb-4">Forecast</p>
           <div className="flex gap-8">
             <div>
-              <p className="text-stat text-accent-primary">
+              <p suppressHydrationWarning className="text-stat text-accent-primary">
                 80% by {forecast.confidence80 ? formatShortDate(forecast.confidence80) : "—"}
               </p>
               <p className="text-meta text-text-secondary">High confidence</p>
             </div>
             <div>
-              <p className="text-stat text-text-secondary">
+              <p suppressHydrationWarning className="text-stat text-text-secondary">
                 95% by {forecast.confidence95 ? formatShortDate(forecast.confidence95) : "—"}
               </p>
               <p className="text-meta text-text-secondary">Maximum estimate</p>
