@@ -12,6 +12,7 @@ import DashboardLayout from "@/components/layout/DashboardLayout";
 import BlockerAlert, { type BlockerAlertData } from "@/components/dashboard/BlockerAlert";
 import TaskRow, { type TaskRowData } from "@/components/dashboard/TaskRow";
 import PLRightPanel from "@/components/dashboard/PLRightPanel";
+import HeroStats from "@/components/dashboard/HeroStats";
 import { ArrowRight, Plus } from "lucide-react";
 import TaskModal from "@/components/tasks/TaskModal";
 
@@ -30,6 +31,8 @@ type Props = {
   blockers: BlockerAlertData[];
   todayTasks: TaskRowData[];
   totalTaskCount: number;
+  inProgressCount: number;
+  blockedCount: number;
   members: Member[];
   velocity: { thisWeek: number; lastWeek: number };
   forecast: {
@@ -63,6 +66,8 @@ export const getServerSideProps: GetServerSideProps<Props> = async (ctx) => {
   let blockers: BlockerAlertData[] = [];
   let todayTasks: TaskRowData[] = [];
   let totalTaskCount = 0;
+  let inProgressCount = 0;
+  let blockedCount = 0;
   let members: Member[] = [];
   let velocity = { thisWeek: 0, lastWeek: 0 };
   let forecast: Props["forecast"] = { confidence80: null, confidence95: null };
@@ -77,6 +82,8 @@ export const getServerSideProps: GetServerSideProps<Props> = async (ctx) => {
       },
     });
     totalTaskCount = allTasks.length;
+    inProgressCount = allTasks.filter((t) => t.status === TaskStatus.IN_PROGRESS).length;
+    blockedCount = allTasks.filter((t) => t.status === TaskStatus.BLOCKED).length;
 
     blockers = allTasks
       .filter((t) => t.status === TaskStatus.BLOCKED)
@@ -178,6 +185,8 @@ export const getServerSideProps: GetServerSideProps<Props> = async (ctx) => {
       blockers,
       todayTasks,
       totalTaskCount,
+      inProgressCount,
+      blockedCount,
       members,
       velocity,
       forecast,
@@ -301,6 +310,13 @@ export default function PLDashboard(props: Props) {
   return (
     <DashboardLayout title="Dashboard" header={header} rightPanel={rightPanel}>
       <div className="flex flex-col gap-10 max-w-[920px]">
+        {/* HERO STATS */}
+        <HeroStats
+          total={props.totalTaskCount}
+          inProgress={props.inProgressCount}
+          blocked={props.blockedCount}
+        />
+
         {/* BLOCKERS */}
         <section>
           <SectionLabel

@@ -83,6 +83,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
             403
           );
         }
+        // Interns can move REVIEW/IN_PROGRESS/BLOCKED/NOT_STARTED but cannot mark DONE.
+        if (body.status === TaskStatus.DONE) {
+          return fail(res, "Only admins can mark tasks as complete.", 403);
+        }
       } else if (role === Role.PROJECT_LEAD) {
         if (!isMyProject) {
           return fail(res, "Forbidden — you are not this project's lead", 403);

@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Info } from "lucide-react";
+import { Info, Lock } from "lucide-react";
 import { TaskStatus, TaskPriority } from "@prisma/client";
 import { cn } from "@/lib/cn";
 import { formatDaysLeft } from "@/lib/format";
@@ -17,16 +17,19 @@ export type InternTask = {
   project: { name: string };
 };
 
-const SEGMENTS: { value: TaskStatus; label: string }[] = [
+type SelectableStatus = Exclude<TaskStatus, "DONE">;
+
+const SEGMENTS: { value: SelectableStatus; label: string }[] = [
   { value: "NOT_STARTED", label: "Not Started" },
   { value: "IN_PROGRESS", label: "In Progress" },
+  { value: "REVIEW", label: "In Review" },
   { value: "BLOCKED", label: "Blocked" },
-  { value: "DONE", label: "Done" },
 ];
 
 const SEGMENT_COLOR: Record<TaskStatus, string> = {
   NOT_STARTED: "border-text-secondary text-text-secondary bg-bg-elevated",
   IN_PROGRESS: "border-status-warning text-status-warning bg-[rgba(251,146,60,0.08)]",
+  REVIEW: "border-[#7B6EF6] text-[#7B6EF6] bg-[rgba(123,110,246,0.10)]",
   BLOCKED: "border-status-danger text-status-danger bg-[rgba(248,113,113,0.08)]",
   DONE: "border-status-success text-status-success bg-[rgba(74,222,128,0.08)]",
 };
@@ -103,7 +106,7 @@ export default function InternTaskCard({
         )}
       </div>
 
-      <div className="grid grid-cols-4 gap-2">
+      <div className="grid grid-cols-5 gap-2">
         {SEGMENTS.map((s) => {
           const isSelected = status === s.value;
           return (
@@ -112,7 +115,7 @@ export default function InternTaskCard({
               disabled={saving}
               onClick={() => update(s.value, s.value === "BLOCKED" ? blockerReason : undefined)}
               className={cn(
-                "py-2 text-meta sm:text-body font-medium rounded-button border transition-colors min-h-[44px]",
+                "py-2 px-1 text-meta font-medium rounded-button border transition-colors min-h-[44px]",
                 isSelected
                   ? SEGMENT_COLOR[s.value]
                   : "border-border-default text-text-secondary hover:border-text-secondary"
@@ -122,7 +125,22 @@ export default function InternTaskCard({
             </button>
           );
         })}
+        <button
+          type="button"
+          disabled
+          title="Admin approval required"
+          className={cn(
+            "py-2 px-1 text-meta font-medium rounded-button border transition-colors min-h-[44px] flex items-center justify-center gap-1.5",
+            status === "DONE"
+              ? SEGMENT_COLOR.DONE
+              : "border-border-default text-text-disabled cursor-not-allowed opacity-60"
+          )}
+        >
+          <Lock size={12} strokeWidth={1.75} /> Done
+        </button>
       </div>
+
+      <StatusEcho status={status} />
 
       {isBlocked && (
         <div className="flex flex-col gap-1.5 mt-1">
@@ -141,4 +159,29 @@ export default function InternTaskCard({
       )}
     </div>
   );
+}
+
+function StatusEcho({ status }: { status: TaskStatus }) {
+  if (status === "REVIEW") {
+    return (
+      <p className="text-[12px] italic" style={{ color: "rgba(74,222,128,0.9)" }}>
+        ✓ Submitted for review · Admin notified
+      </p>
+    );
+  }
+  if (status === "DONE") {
+    return (
+      <p className="text-[12px] italic" style={{ color: "rgba(74,222,128,0.9)" }}>
+        ✓ Approved by Admin
+      </p>
+    );
+  }
+  if (status === "BLOCKED") {
+    return (
+      <p className="text-[12px] italic text-[#F87171]">
+        ⚠ Blocked · Admin has been notified
+      </p>
+    );
+  }
+  return null;
 }

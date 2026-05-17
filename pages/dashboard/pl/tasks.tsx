@@ -1,10 +1,10 @@
 import type { GetServerSideProps } from "next";
 import { useRouter } from "next/router";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { getServerSession } from "next-auth/next";
 import type { Session } from "next-auth";
 import { Role, TaskStatus, TaskPriority } from "@prisma/client";
-import { Plus } from "lucide-react";
+import { Plus, LayoutGrid, List } from "lucide-react";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { serializableSession } from "@/lib/session-utils";
@@ -15,6 +15,7 @@ import StatusBadge, { statusBorderClass } from "@/components/tasks/StatusBadge";
 import PriorityChip from "@/components/tasks/PriorityChip";
 import Avatar from "@/components/ui/Avatar";
 import TaskModal from "@/components/tasks/TaskModal";
+import KanbanBoard from "@/components/tasks/KanbanBoard";
 
 type Row = {
   id: string;
@@ -84,6 +85,18 @@ export default function TasksPage({ today, tasks, projects }: Props) {
   );
   const [editTaskId, setEditTaskId] = useState<string | null>(null);
   const [modalOpen, setModalOpen] = useState(false);
+  const [view, setView] = useState<"board" | "list">("board");
+
+  // Hydrate persisted view choice from localStorage (client-only).
+  useEffect(() => {
+    const saved = typeof window !== "undefined" && window.localStorage.getItem("tasksView");
+    if (saved === "board" || saved === "list") setView(saved);
+  }, []);
+
+  function chooseView(next: "board" | "list") {
+    setView(next);
+    if (typeof window !== "undefined") window.localStorage.setItem("tasksView", next);
+  }
 
   const visible = filter === "ALL" ? tasks : tasks.filter((t) => t.status === filter);
 
@@ -104,6 +117,7 @@ export default function TasksPage({ today, tasks, projects }: Props) {
     ALL: tasks.length,
     NOT_STARTED: tasks.filter((t) => t.status === TaskStatus.NOT_STARTED).length,
     IN_PROGRESS: tasks.filter((t) => t.status === TaskStatus.IN_PROGRESS).length,
+    REVIEW: tasks.filter((t) => t.status === TaskStatus.REVIEW).length,
     BLOCKED: tasks.filter((t) => t.status === TaskStatus.BLOCKED).length,
     DONE: tasks.filter((t) => t.status === TaskStatus.DONE).length,
   };
@@ -112,6 +126,7 @@ export default function TasksPage({ today, tasks, projects }: Props) {
     { value: "ALL", label: "All" },
     { value: "BLOCKED", label: "Blocked" },
     { value: "IN_PROGRESS", label: "In Progress" },
+    { value: "REVIEW", label: "In Review" },
     { value: "NOT_STARTED", label: "Not Started" },
     { value: "DONE", label: "Done" },
   ];
@@ -122,18 +137,54 @@ export default function TasksPage({ today, tasks, projects }: Props) {
         <h1 className="text-section text-text-primary">Tasks</h1>
         <p className="text-meta text-text-secondary">{today}</p>
       </div>
-      <button
-        onClick={openCreate}
-        className="flex items-center gap-1.5 bg-accent-primary hover:bg-accent-hover text-text-primary text-meta font-semibold px-4 py-2 rounded-button transition-colors"
-      >
-        <Plus size={14} /> New Task
-      </button>
+      <div className="flex items-center gap-3">
+        <div className="flex items-center gap-0.5 border border-border-default rounded-button p-0.5">
+          <button
+            type="button"
+            onClick={() => chooseView("board")}
+            aria-label="Board view"
+            aria-pressed={view === "board"}
+            className={cn(
+              "p-1.5 rounded-[4px] transition-colors",
+              view === "board"
+                ? "bg-bg-elevated text-text-primary"
+                : "text-text-secondary hover:text-text-primary"
+            )}
+          >
+            <LayoutGrid size={14} strokeWidth={1.75} />
+          </button>
+          <button
+            type="button"
+            onClick={() => chooseView("list")}
+            aria-label="List view"
+            aria-pressed={view === "list"}
+            className={cn(
+              "p-1.5 rounded-[4px] transition-colors",
+              view === "list"
+                ? "bg-bg-elevated text-text-primary"
+                : "text-text-secondary hover:text-text-primary"
+            )}
+          >
+            <List size={14} strokeWidth={1.75} />
+          </button>
+        </div>
+        <button
+          onClick={openCreate}
+          className="flex items-center gap-1.5 bg-accent-primary hover:bg-accent-hover text-text-primary text-meta font-semibold px-4 py-2 rounded-button transition-colors"
+        >
+          <Plus size={14} /> New Task
+        </button>
+      </div>
     </div>
   );
 
   return (
     <DashboardLayout title="Tasks" header={header}>
       <div className="flex flex-col gap-6 max-w-[1100px]">
+        {view === "board" ? (
+          <KanbanBoard tasks={tasks} onCardClick={openEdit} />
+        ) : (
+          <>
         {/* Filters */}
         <div className="flex items-center gap-2 flex-wrap">
           {FILTERS.map((f) => {
@@ -190,12 +241,14 @@ export default function TasksPage({ today, tasks, projects }: Props) {
                   <span className="text-meta text-text-secondary w-16 text-right shrink-0 hidden sm:inline tabular-nums">
                     {t.deadline ? formatShortDate(t.deadline) : "—"}
                   </span>
-                  <PriorityChip priority={t.priority} className="w-6 text-right shrink-0" />
+                  <PriorityChip priority={t.priority} className="shrink-0" />
                 </button>
               );
             })
           )}
         </div>
+          </>
+        )}
       </div>
 
       <TaskModal

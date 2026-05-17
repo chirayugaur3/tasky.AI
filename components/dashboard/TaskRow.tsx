@@ -49,7 +49,7 @@ export default function TaskRow({
       <span className="text-meta text-text-secondary w-10 text-right shrink-0 hidden sm:inline tabular-nums">
         {task.deadline ? formatTime(task.deadline) : "—"}
       </span>
-      <PriorityChip priority={task.priority} className="w-6 text-right shrink-0" />
+      <PriorityChip priority={task.priority} className="shrink-0" />
     </button>
   );
 }

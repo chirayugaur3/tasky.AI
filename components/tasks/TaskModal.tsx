@@ -277,17 +277,23 @@ export default function TaskModal({
           {isEdit && (
             <div className="flex flex-col gap-2">
               <label className="text-meta text-text-secondary tracking-section uppercase font-medium">Status</label>
-              <div className="grid grid-cols-4 gap-2">
-                {(["NOT_STARTED", "IN_PROGRESS", "BLOCKED", "DONE"] as TaskStatus[]).map((s) => {
+              <div className="grid grid-cols-5 gap-2">
+                {(["NOT_STARTED", "IN_PROGRESS", "REVIEW", "BLOCKED", "DONE"] as TaskStatus[]).map((s) => {
                   const isSel = status === s;
                   const tint =
                     s === "DONE"
                       ? "border-status-success text-status-success bg-[rgba(74,222,128,0.08)]"
                       : s === "BLOCKED"
                       ? "border-status-danger text-status-danger bg-[rgba(248,113,113,0.08)]"
+                      : s === "REVIEW"
+                      ? "border-[#7B6EF6] text-[#7B6EF6] bg-[rgba(123,110,246,0.10)]"
                       : s === "IN_PROGRESS"
                       ? "border-status-warning text-status-warning bg-[rgba(251,146,60,0.08)]"
                       : "border-text-secondary text-text-secondary bg-bg-elevated";
+                  const label =
+                    s === "REVIEW"
+                      ? "In Review"
+                      : s.replace("_", " ").toLowerCase().replace(/\b\w/g, (c) => c.toUpperCase());
                   return (
                     <button
                       key={s}
@@ -298,7 +304,7 @@ export default function TaskModal({
                         isSel ? tint : "border-border-default text-text-secondary hover:border-text-secondary"
                       )}
                     >
-                      {s.replace("_", " ").toLowerCase().replace(/\b\w/g, (c) => c.toUpperCase())}
+                      {label}
                     </button>
                   );
                 })}

@@ -19,6 +19,7 @@ type Props = {
   completedToday: InternTask[];
   todayCount: number;
   blockedCount: number;
+  reviewCount: number;
 };
 
 export const getServerSideProps: GetServerSideProps<Props> = async (ctx) => {
@@ -81,6 +82,7 @@ export const getServerSideProps: GetServerSideProps<Props> = async (ctx) => {
   upcoming.sort(taskSorter);
 
   const blockedCount = tasks.filter((t) => t.status === TaskStatus.BLOCKED).length;
+  const reviewCount = tasks.filter((t) => t.status === TaskStatus.REVIEW).length;
 
   return {
     props: {
@@ -92,6 +94,7 @@ export const getServerSideProps: GetServerSideProps<Props> = async (ctx) => {
       completedToday,
       todayCount: todayTasks.length,
       blockedCount,
+      reviewCount,
     },
   };
 };
@@ -110,17 +113,12 @@ export default function InternDashboard(props: Props) {
   return (
     <DashboardLayout title="My Tasks" header={header}>
       <div className="max-w-[800px] flex flex-col gap-8">
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between flex-wrap gap-3">
           <h2 className="text-section text-text-primary">My Tasks</h2>
-          <div className="flex items-center gap-2">
-            <span className="text-meta text-accent-primary bg-accent-subtle px-3 py-1 rounded-chip flex items-center gap-2">
-              <span className="w-1.5 h-1.5 rounded-full bg-accent-primary" />
-              {props.todayCount} Today
-            </span>
-            <span className="text-meta text-status-danger bg-[rgba(248,113,113,0.08)] px-3 py-1 rounded-chip flex items-center gap-2">
-              <span className="w-1.5 h-1.5 rounded-full bg-status-danger" />
-              {props.blockedCount} Blocked
-            </span>
+          <div className="flex items-center gap-2 flex-wrap">
+            <StatChip dotColor="#7B6EF6" label={`${props.todayCount} Tasks Today`} />
+            <StatChip dotColor="#F87171" label={`${props.blockedCount} Blocked`} />
+            <StatChip dotColor="#7B6EF6" label={`${props.reviewCount} In Review`} />
           </div>
         </div>
 
@@ -182,5 +180,17 @@ export default function InternDashboard(props: Props) {
         )}
       </div>
     </DashboardLayout>
+  );
+}
+
+function StatChip({ dotColor, label }: { dotColor: string; label: string }) {
+  return (
+    <span className="inline-flex items-center gap-2 bg-[#13131E] border border-[rgba(255,255,255,0.06)] rounded-[6px] px-[14px] py-2 text-[13px] text-[#EEEEF5]">
+      <span
+        className="w-[6px] h-[6px] rounded-full shrink-0"
+        style={{ background: dotColor }}
+      />
+      {label}
+    </span>
   );
 }

@@ -63,7 +63,7 @@ export function formatDaysLeft(deadline: Date | string): string {
   return `${days}d left`;
 }
 
-/** Priority label compression — HIGH → "P1", MEDIUM → "P2", LOW → "P3" */
+/** Priority label compression — HIGH → "HIGH", MEDIUM → "MED", LOW → "LOW" */
 export function priorityLabel(p: "HIGH" | "MEDIUM" | "LOW"): string {
-  return p === "HIGH" ? "P1" : p === "MEDIUM" ? "P2" : "P3";
+  return p === "HIGH" ? "HIGH" : p === "MEDIUM" ? "MED" : "LOW";
 }

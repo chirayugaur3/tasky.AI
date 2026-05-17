@@ -1,6 +1,7 @@
-import { TrendingUp, Flag } from "lucide-react";
+import { Flag } from "lucide-react";
 import { format } from "date-fns";
 import { cn } from "@/lib/cn";
+import VelocitySparkline from "@/components/dashboard/VelocitySparkline";
 
 type Member = {
   userId: string;
@@ -28,6 +29,24 @@ function SectionLabel({ children }: { children: React.ReactNode }) {
       {children}
     </p>
   );
+}
+
+function VelocityTrend({
+  thisWeek,
+  lastWeek,
+}: {
+  thisWeek: number;
+  lastWeek: number;
+}) {
+  if (thisWeek === lastWeek) return null;
+  if (thisWeek > lastWeek) {
+    return (
+      <p className="text-[12px]" style={{ color: "rgba(74,222,128,0.9)" }}>
+        ↑ More than last week
+      </p>
+    );
+  }
+  return <p className="text-[12px] text-[#F87171]">↓ Slower than last week</p>;
 }
 
 export default function PLRightPanel({
@@ -76,31 +95,15 @@ export default function PLRightPanel({
         </div>
       </section>
 
-      {/* VELOCITY */}
+      {/* VELOCITY — sparkline of last 7 days, with this-vs-last week trend */}
       <section className="flex flex-col gap-3">
         <SectionLabel>Velocity</SectionLabel>
-        <div className="bg-bg-elevated rounded-card border border-border-subtle p-4 flex items-center justify-between">
-          <div className="flex flex-col items-start">
-            <span className="text-stat text-text-primary">{velocity.thisWeek}</span>
-            <span className="text-meta text-text-secondary tracking-section uppercase">
-              This week
-            </span>
-          </div>
-          <TrendingUp
-            size={20}
-            className={cn(
-              "shrink-0",
-              velocity.thisWeek >= velocity.lastWeek
-                ? "text-accent-primary"
-                : "text-status-danger rotate-180"
-            )}
+        <div className="bg-bg-elevated rounded-card border border-border-subtle p-4 flex flex-col gap-2">
+          <VelocitySparkline />
+          <VelocityTrend
+            thisWeek={velocity.thisWeek}
+            lastWeek={velocity.lastWeek}
           />
-          <div className="flex flex-col items-end">
-            <span className="text-stat text-text-primary">{velocity.lastWeek}</span>
-            <span className="text-meta text-text-secondary tracking-section uppercase">
-              Last week
-            </span>
-          </div>
         </div>
       </section>
 

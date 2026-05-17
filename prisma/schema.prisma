@@ -24,6 +24,7 @@ enum Role {
 enum TaskStatus {
   NOT_STARTED
   IN_PROGRESS
+  REVIEW
   BLOCKED
   DONE
 }
